@@ -89,6 +89,13 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         fastify.db.users.change(user.id, user);
       });
 
+      const userPosts = await fastify.db.posts.findMany({
+        key: 'userId',
+        equals: deletedUser.id,
+      });
+
+      userPosts.forEach((post) => fastify.db.posts.delete(post.id));
+
       return deletedUser;
     }
   );
