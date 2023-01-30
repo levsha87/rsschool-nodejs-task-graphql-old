@@ -11,7 +11,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
 ): Promise<void> => {
   fastify.get('/', async function (request, reply): Promise<UserEntity[]> {
-    return reply.send(fastify.db.users);
+    return await fastify.db.users.findMany();
   });
 
   fastify.get(
@@ -69,6 +69,18 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         key: 'subscribedToUserIds',
         inArray: id,
       });
+
+      const usersProfileHasId = await fastify.db.profiles
+        .findOne({
+          key: 'userId',
+          equals: id,
+        })
+        .then((profile) => {
+          if (profile === null) throw fastify.httpErrors.notFound();
+          return profile;
+        });
+
+      await fastify.db.profiles.delete(usersProfileHasId.id);
 
       usersHasId.forEach((user) => {
         user.subscribedToUserIds = user.subscribedToUserIds.filter(
